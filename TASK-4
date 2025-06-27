@@ -1,0 +1,73 @@
+from cryptography.fernet import Fernet
+import os
+
+
+def generate_key():
+    key = Fernet.generate_key()
+    with open("secret.key", "wb") as key_file:
+        key_file.write(key)
+    print("[✅] Key generated and saved to 'secret.key'.")
+
+
+def load_key():
+    try:
+        with open("secret.key", "rb") as key_file:
+            return key_file.read()
+    except FileNotFoundError:
+        print("[❌] Key file not found. Generate key first.")
+        return None
+
+
+def encrypt_file(filename, key):
+    f = Fernet(key)
+    with open(filename, "rb") as file:
+        original_data = file.read()
+    encrypted_data = f.encrypt(original_data)
+    with open(filename + ".enc", "wb") as enc_file:
+        enc_file.write(encrypted_data)
+    print(f"[🔐] '{filename}' encrypted to '{filename}.enc'.")
+
+
+def decrypt_file(filename, key):
+    f = Fernet(key)
+    with open(filename, "rb") as enc_file:
+        encrypted_data = enc_file.read()
+    try:
+        decrypted_data = f.decrypt(encrypted_data)
+        original_name = filename.replace(".enc", "")
+        with open("decrypted_" + os.path.basename(original_name), "wb") as dec_file:
+            dec_file.write(decrypted_data)
+        print(f"[🔓] File decrypted to 'decrypted_{os.path.basename(original_name)}'.")
+    except:
+        print("[❌] Decryption failed. Wrong key or corrupt file.")
+
+def menu():
+    while True:
+        print("\n🔐 ADVANCED FILE ENCRYPTION TOOL 🔐")
+        print("1. Generate Key")
+        print("2. Encrypt File")
+        print("3. Decrypt File")
+        print("4. Exit")
+
+        choice = input("Choose an option (1-4): ")
+
+        if choice == "1":
+            generate_key()
+        elif choice == "2":
+            filename = input("Enter filename to encrypt: ")
+            key = load_key()
+            if key:
+                encrypt_file(filename, key)
+        elif choice == "3":
+            filename = input("Enter '.enc' file to decrypt: ")
+            key = load_key()
+            if key:
+                decrypt_file(filename, key)
+        elif choice == "4":
+            print("Exiting...")
+            break
+        else:
+            print("Invalid choice.")
+
+if __name__ == "__main__":
+    menu()
